@@ -39,19 +39,69 @@ Bar
 
         local root_nodes = parser.parse_sections(buf)
 
-        expectNodeCount(root_nodes, 2)
+        assert.are.same(root_nodes, {
+            {
+                name = "First header", type = "header", position = {1, 1},
+                children = {},
+            },
+            {
+                name = "Second header", type = "header", position = {5, 1},
+                children = {},
+            }
+        })
+    end)
 
-        expectNodeName(root_nodes[1], "First header")
-        expectNodeName(root_nodes[2], "Second header")
+it("parse nested headers", function()
+        local buf = create_buf_with_text([[
+# Parent header
+## Sub header
+]], "markdown")
 
-        expectNodeType(root_nodes[1], "header")
-        expectNodeType(root_nodes[2], "header")
+        local root_nodes = parser.parse_sections(buf)
 
-        expectNodePosition(root_nodes[1], {1, 1})
-        expectNodePosition(root_nodes[2], {5, 1})
+        assert.are.same(root_nodes, {
+            {
+                name = "Parent header", type = "header", position = {1, 1},
+                children = {
+                    {
+                        name = "Sub header", type = "header", position = {2, 1},
+                        children = {},
+                    }
+                },
+            },
+        })
+    end)
 
-        expectNodeCount(root_nodes[1].children, 0)
-        expectNodeCount(root_nodes[2].children, 0)
+it("associate child section to correct parent", function()
+        local buf = create_buf_with_text([[
+# Parent header
+## Sub header
+### Sub sub header
+## Sub header 2
+]], "markdown")
+
+        local root_nodes = parser.parse_sections(buf)
+
+        assert.are.same(root_nodes, {
+            {
+                name = "Parent header", type = "header", position = {1, 1},
+                children = {
+                    {
+                        name = "Sub header", type = "header", position = {2, 1},
+                        children = {
+                            {
+                                name = "Sub sub header", type = "header", position = {3, 1},
+                                children = {},
+                            }
+                        },
+                    },
+                    {
+                        name = "Sub header 2", type = "header", position = {4, 1},
+                        children = {},
+                    }
+                },
+            },
+        })
     end)
 end)
 
