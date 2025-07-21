@@ -13,7 +13,7 @@ local function build_section(match, metadata, query_info, buf_id)
 
             if capture_name == "section" then
                 local sr, sc, _, _ = ts.get_node_range(node)
-                current_section.position = { sr + 1, sc + 1 }
+                current_section.position = { sr + 1, sc }
                 current_section.type = metadata.type
                 current_section.node = node
             elseif capture_name == "section.name" then

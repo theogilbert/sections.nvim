@@ -24,11 +24,11 @@ Bar
 
         assert.are.same(root_nodes, {
             {
-                name = "First header", type = "header", position = {1, 1},
+                name = "First header", type = "header", position = {1, 0},
                 children = {},
             },
             {
-                name = "Second header", type = "header", position = {5, 1},
+                name = "Second header", type = "header", position = {5, 0},
                 children = {},
             }
         })
@@ -44,10 +44,10 @@ it("should parse nested headers", function()
 
         assert.are.same(root_nodes, {
             {
-                name = "Parent header", type = "header", position = {1, 1},
+                name = "Parent header", type = "header", position = {1, 0},
                 children = {
                     {
-                        name = "Sub header", type = "header", position = {2, 1},
+                        name = "Sub header", type = "header", position = {2, 0},
                         children = {},
                     }
                 },
@@ -67,19 +67,19 @@ it("should associate child section to correct parent", function()
 
         assert.are.same(root_nodes, {
             {
-                name = "Parent header", type = "header", position = {1, 1},
+                name = "Parent header", type = "header", position = {1, 0},
                 children = {
                     {
-                        name = "Sub header", type = "header", position = {2, 1},
+                        name = "Sub header", type = "header", position = {2, 0},
                         children = {
                             {
-                                name = "Sub sub header", type = "header", position = {3, 1},
+                                name = "Sub sub header", type = "header", position = {3, 0},
                                 children = {},
                             }
                         },
                     },
                     {
-                        name = "Sub header 2", type = "header", position = {4, 1},
+                        name = "Sub header 2", type = "header", position = {4, 0},
                         children = {},
                     }
                 },
@@ -101,11 +101,11 @@ function function2() end
 
         assert.are.same(root_nodes, {
             {
-                name = "function1", type = "function", position = {1, 1},
+                name = "function1", type = "function", position = {1, 0},
                 children = {},
             },
             {
-                name = "function2", type = "function", position = {2, 1},
+                name = "function2", type = "function", position = {2, 0},
                 children = {},
             }
         })
