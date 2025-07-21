@@ -1,6 +1,6 @@
 local function create_buf_with_text(text, lang)
     local buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_option(buf, "filetype", lang)
+    vim.api.nvim_set_option_value("filetype", lang, { buf = buf })
     local lines = vim.split(text, '\n')
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
     return buf
