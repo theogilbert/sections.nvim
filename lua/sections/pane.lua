@@ -42,7 +42,7 @@ local function open_pane(src_buf)
     local width = detect_pane_width(lines)
 
     vim.api.nvim_open_win(
-        bufid, false, { vertical = true, split = "right", width = width, style = "minimal"}
+        bufid, false, { vertical = true, split = "left", width = width, style = "minimal"}
     )
 end
 
