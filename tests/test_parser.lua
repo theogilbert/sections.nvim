@@ -1,21 +1,21 @@
-function expectNodeCount(root_nodes, count)
+local function expectNodeCount(root_nodes, count)
     assert.equals(count, #root_nodes, "Invalid number of parsed nodes")
 end
 
-function expectNodeName(node, name)
+local function expectNodeName(node, name)
     assert.equals(name, node.name, "Invalid node name")
 end
 
-function expectNodeType(node, name)
+local function expectNodeType(node, name)
     assert.equals(name, node.type, "Header")
 end
 
-function expectNodePosition(node, pos)
+local function expectNodePosition(node, pos)
     assert.equals(pos[1], node.position[1], "Invalid node column position")
     assert.equals(pos[2], node.position[2], "Invalid node row position")
 end
 
-function create_buf_with_text(text, lang)
+local function create_buf_with_text(text, lang)
     local buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_option(buf, "filetype", lang)
     local lines = vim.split(text, '\n')
@@ -23,7 +23,7 @@ function create_buf_with_text(text, lang)
     return buf
 end
 
-describe("parsing markdown sections", function()
+describe("should parse markdown sections", function()
     local parser = require("sections.parser")
 
     it("parse subsequent headers", function()
@@ -51,7 +51,7 @@ Bar
         })
     end)
 
-it("parse nested headers", function()
+it("should parse nested headers", function()
         local buf = create_buf_with_text([[
 # Parent header
 ## Sub header
@@ -72,7 +72,7 @@ it("parse nested headers", function()
         })
     end)
 
-it("associate child section to correct parent", function()
+it("should associate child section to correct parent", function()
         local buf = create_buf_with_text([[
 # Parent header
 ## Sub header
@@ -105,3 +105,37 @@ it("associate child section to correct parent", function()
     end)
 end)
 
+describe("parsing lua sections", function()
+    local parser = require("sections.parser")
+
+    it("should parse subsequent functions", function()
+        local buf = create_buf_with_text([[
+function1 = function() end
+function function2() end
+        ]], "lua")
+
+        local root_nodes = parser.parse_sections(buf)
+
+        assert.are.same(root_nodes, {
+            {
+                name = "function1", type = "function", position = {1, 1},
+                children = {},
+            },
+            {
+                name = "function2", type = "function", position = {2, 1},
+                children = {},
+            }
+        })
+    end)
+
+    it("should not parse non-function assignments", function()
+        local buf = create_buf_with_text([[
+local text = "abcd"
+number = 123
+        ]], "lua")
+
+        local root_nodes = parser.parse_sections(buf)
+
+        assert.are.same(root_nodes, {})
+    end)
+end)
