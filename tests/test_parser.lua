@@ -1,20 +1,3 @@
-local function expectNodeCount(root_nodes, count)
-    assert.equals(count, #root_nodes, "Invalid number of parsed nodes")
-end
-
-local function expectNodeName(node, name)
-    assert.equals(name, node.name, "Invalid node name")
-end
-
-local function expectNodeType(node, name)
-    assert.equals(name, node.type, "Header")
-end
-
-local function expectNodePosition(node, pos)
-    assert.equals(pos[1], node.position[1], "Invalid node column position")
-    assert.equals(pos[2], node.position[2], "Invalid node row position")
-end
-
 local function create_buf_with_text(text, lang)
     local buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_option(buf, "filetype", lang)
