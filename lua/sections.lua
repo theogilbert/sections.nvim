@@ -1,4 +1,4 @@
-local init_config = require("sections.config").init_config
+local init_config = require("sections.config").init
 local pane = require("sections.pane")
 
 local M = {}
