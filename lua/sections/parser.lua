@@ -77,9 +77,9 @@ end
 M.parse_sections = function(buf_id)
     local lang = vim.api.nvim_get_option_value('filetype', { buf = buf_id })
 
-    local parser = ts.get_parser(buf_id, lang)
+    local parser = ts.get_parser(buf_id, lang, { error = false })
     if parser == nil then
-        return nil, "No treesitter parser found for " .. lang .. " files"
+        return nil, "No treesitter parser found for filetype '" .. lang .. "'"
     end
 
     local tree = parser:parse()[1]
@@ -87,7 +87,7 @@ M.parse_sections = function(buf_id)
 
     local queries = ts.query.get(lang, "sections")
     if queries == nil then
-        return nil, "No sections.scm file found for " .. lang .. " files"
+        return nil, "No sections.scm file found for filetype '" .. lang .. "'"
     end
 
     local root_sections = {}
