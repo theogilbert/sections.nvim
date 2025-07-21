@@ -30,7 +30,11 @@ local function open_pane(src_buf)
     vim.bo[bufid].filetype = PANE_FILETYPE
     vim.bo[bufid].buftype = "nofile"
 
-    local sections = parser.parse_sections(src_buf)
+    local sections, err = parser.parse_sections(src_buf)
+    if sections == nil and err ~= nil then
+        vim.notify(err, vim.log.levels.ERROR)
+        return
+    end
     formatter.update_sections(sections)
     local lines = formatter.format()
     vim.api.nvim_buf_set_lines(bufid, 0, -1, false, lines)
