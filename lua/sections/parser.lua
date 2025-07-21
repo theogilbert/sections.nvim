@@ -106,8 +106,7 @@ M.parse_sections = function(buf_id)
         table.insert(sections_stack, new_section)
     end
 
-    clean_sections = cleanup_internal_data_from_sections(root_sections)
-    return clean_sections, nil
+    return cleanup_internal_data_from_sections(root_sections), nil
 end
 
 return M
