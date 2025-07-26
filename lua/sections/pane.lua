@@ -1,9 +1,11 @@
 local M = {}
 
 local PANE_FILETYPE = "sections-pane"
+local _source_win = nil
 
 local parser = require("sections.parser")
 local formatter = require("sections.formatter")
+
 
 local function detect_pane_width(lines, min, max)
     min = min or 20
@@ -24,15 +26,33 @@ local function detect_pane_width(lines, min, max)
     return width
 end
 
+local function notify_error(msg)
+    vim.notify(msg, vim.log.levels.ERROR)
+end
+
+local function select_section()
+    if _source_win == nil or not vim.api.nvim_win_is_valid(_source_win) then
+        notify_error("Source window not found")
+        return
+    end
+
+    local cur_line = vim.api.nvim_win_get_cursor(0)[1]
+    local pos = formatter.get_section_pos(cur_line)
+
+    vim.api.nvim_win_set_cursor(_source_win, pos)
+end
+
 
 local function open_pane(src_buf)
+    _source_win = vim.api.nvim_get_current_win()
+
     local bufid = vim.api.nvim_create_buf(true, false)
     vim.bo[bufid].filetype = PANE_FILETYPE
     vim.bo[bufid].buftype = "nofile"
 
     local sections, err = parser.parse_sections(src_buf)
     if sections == nil and err ~= nil then
-        vim.notify(err, vim.log.levels.ERROR)
+        notify_error(err)
         return
     end
     formatter.update_sections(sections)
@@ -45,6 +65,9 @@ local function open_pane(src_buf)
         bufid, false, { vertical = true, split = "left", width = width, style = "minimal"}
     )
     vim.api.nvim_set_option_value("cursorline", true, { win = winid })
+    vim.keymap.set("n", "<cr>", select_section, { buffer = bufid })
+
+    vim.bo[bufid].modifiable = false
 end
 
 local function close_pane(winid)
