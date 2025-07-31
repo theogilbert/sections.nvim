@@ -53,6 +53,7 @@ end
 local function close_pane(winid)
     local bufid = vim.api.nvim_win_get_buf(winid)
     vim.api.nvim_buf_delete(bufid, {force = true})
+    M.cleanup_pane()
 end
 
 
@@ -79,6 +80,15 @@ M.get_pane_buf = function()
     return info.pane_buf
 end
 
+M.get_pane_win = function()
+    local info = get_pane_info()
+    if info == nil then
+        return nil
+    end
+
+    return info.pane_win
+end
+
 M.toggle_pane = function()
     local pane_info = get_pane_info()
 
@@ -103,6 +113,10 @@ M.refresh_pane = function(updated_buf, buf_win)
         local win_cfg = vim.api.nvim_win_get_config(buf_win)
         if win_cfg.relative ~= "" then
             return  -- Window is floating
+        end
+
+        if buf_win == pane_info.pane_win then
+            return -- We were about to read sections from the pane win
         end
     end
 

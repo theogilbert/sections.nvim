@@ -25,6 +25,15 @@ local function setup_autocommands()
             end
         end,
     })
+    vim.api.nvim_create_autocmd("BufWinEnter", {
+        group = group,
+        callback = function(args)
+            local win = vim.api.nvim_get_current_win()
+            if win == pane.get_pane_win() then
+                pane.toggle_pane()
+            end
+        end,
+    })
     vim.api.nvim_create_autocmd("WinClosed", {
         group = group,
         callback = function(args)
