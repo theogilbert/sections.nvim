@@ -1,12 +1,20 @@
+local config = require("sections.config")
+
 local M = {}
 
 local _sections = {}
+
+local function get_section_icon(section_type)
+    local cfg = config.get_config()
+    return cfg.icons[section_type]
+end
 
 local function section_to_text(section, out_lines, indent)
     indent = indent or 0
 
     local prefix = string.rep(" ", indent)
-    table.insert(out_lines, prefix .. section.name)
+    local icon = get_section_icon(section.type) or ''
+    table.insert(out_lines, prefix .. icon .. " " .. section.name)
 
     for _, sub_section in pairs(section.children) do
         section_to_text(sub_section, out_lines, indent + 2)
