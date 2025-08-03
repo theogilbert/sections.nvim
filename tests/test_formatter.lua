@@ -1,5 +1,13 @@
 describe("should display sections", function()
     local formatter = require("sections.formatter")
+    local config = require("sections.config")
+
+    config.init({
+        icons = {
+            ["function"] = "f",
+            header = "#",
+        },
+    })
 
     it("should format sequential sections", function()
         local sections = {
@@ -19,7 +27,7 @@ describe("should display sections", function()
 
         formatter.update_sections(sections)
 
-        assert.are.same({ "First header", "Second header" }, formatter.format())
+        assert.are.same({ "# First header", "# Second header" }, formatter.format())
     end)
 
     it("should format nested sections", function()
@@ -41,7 +49,50 @@ describe("should display sections", function()
 
         formatter.update_sections(sections)
 
-        assert.are.same({ "Parent header", "  Sub header" }, formatter.format())
+        assert.are.same({ "# Parent header", "  # Sub header" }, formatter.format())
+    end)
+
+    it("should format header section", function()
+        formatter.update_sections({
+            {
+                name = "First header",
+                type = "header",
+                children = {},
+            },
+        })
+
+        local lines = formatter.format()
+
+        assert.are.same({ "# First header" }, lines)
+    end)
+
+    it("should format function section", function()
+        formatter.update_sections({
+            {
+                name = "foo",
+                type = "function",
+                children = {},
+            },
+        })
+
+        local lines = formatter.format()
+
+        assert.are.same({ "f foo()" }, lines)
+    end)
+
+    it("should format function section with parameters", function()
+        formatter.update_sections({
+            {
+                name = "foo",
+                type = "function",
+                children = {},
+                parameters = { "abc", "bar" },
+            },
+        })
+
+        local lines = formatter.format()
+
+        assert.are.same({ "f foo(abc, bar)" }, lines)
     end)
 end)
 

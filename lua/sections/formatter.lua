@@ -9,15 +9,29 @@ local function get_section_icon(section_type)
     return cfg.icons[section_type]
 end
 
-local function section_to_text(section, out_lines, indent)
+local function get_section_text(section)
+    local suffix = ""
+    if section.type == "function" then
+        if section.parameters == nil then
+            suffix = "()"
+        else
+            suffix = "(" .. table.concat(section.parameters, ", ") .. ")"
+        end
+    end
+
+    return section.name .. suffix
+end
+
+local function write_sections(section, out_lines, indent)
     indent = indent or 0
 
     local prefix = string.rep(" ", indent)
     local icon = get_section_icon(section.type) or ""
-    table.insert(out_lines, prefix .. icon .. " " .. section.name)
+    local text = get_section_text(section)
+    table.insert(out_lines, prefix .. icon .. " " .. text)
 
     for _, sub_section in pairs(section.children) do
-        section_to_text(sub_section, out_lines, indent + 2)
+        write_sections(sub_section, out_lines, indent + 2)
     end
 end
 
@@ -29,13 +43,13 @@ M.format = function()
     local lines = {}
 
     for _, section in pairs(_sections) do
-        section_to_text(section, lines)
+        write_sections(section, lines)
     end
 
     return lines
 end
 
-local function _get_nth_section(sections, n, current_idx)
+local function get_nth_section(sections, n, current_idx)
     current_idx = current_idx or 0
 
     for _, section in pairs(sections) do
@@ -45,7 +59,7 @@ local function _get_nth_section(sections, n, current_idx)
             return section, current_idx
         end
 
-        local matching_sub_section, new_idx = _get_nth_section(section.children, n, current_idx)
+        local matching_sub_section, new_idx = get_nth_section(section.children, n, current_idx)
         if matching_sub_section ~= nil then
             return matching_sub_section, new_idx
         else
@@ -57,7 +71,7 @@ local function _get_nth_section(sections, n, current_idx)
 end
 
 M.get_section_pos = function(section_idx)
-    local section = _get_nth_section(_sections, section_idx)
+    local section = get_nth_section(_sections, section_idx)
     if section ~= nil then
         return section.position
     end
