@@ -22,7 +22,7 @@ Bar
 
         local root_nodes = parser.parse_sections(buf)
 
-        assert.are.same(root_nodes, {
+        assert.are.same({
             {
                 name = "First header", type = "header", position = {1, 0},
                 children = {},
@@ -31,7 +31,7 @@ Bar
                 name = "Second header", type = "header", position = {5, 0},
                 children = {},
             }
-        })
+        }, root_nodes)
     end)
 
 it("should parse nested headers", function()
@@ -42,7 +42,7 @@ it("should parse nested headers", function()
 
         local root_nodes = parser.parse_sections(buf)
 
-        assert.are.same(root_nodes, {
+        assert.are.same({
             {
                 name = "Parent header", type = "header", position = {1, 0},
                 children = {
@@ -52,7 +52,7 @@ it("should parse nested headers", function()
                     }
                 },
             },
-        })
+        }, root_nodes)
     end)
 
 it("should associate child section to correct parent", function()
@@ -65,7 +65,7 @@ it("should associate child section to correct parent", function()
 
         local root_nodes = parser.parse_sections(buf)
 
-        assert.are.same(root_nodes, {
+        assert.are.same({
             {
                 name = "Parent header", type = "header", position = {1, 0},
                 children = {
@@ -84,7 +84,7 @@ it("should associate child section to correct parent", function()
                     }
                 },
             },
-        })
+        }, root_nodes)
     end)
 end)
 
@@ -99,16 +99,16 @@ function function2() end
 
         local root_nodes = parser.parse_sections(buf)
 
-        assert.are.same(root_nodes, {
+        assert.are.same({
             {
                 name = "function1", type = "function", position = {1, 0},
-                children = {},
+                children = {}
             },
             {
                 name = "function2", type = "function", position = {2, 0},
-                children = {},
+                children = {}
             }
-        })
+        }, root_nodes)
     end)
 
     it("should not parse non-function assignments", function()
@@ -120,5 +120,25 @@ number = 123
         local root_nodes = parser.parse_sections(buf)
 
         assert.are.same(root_nodes, {})
+    end)
+
+    it("should parse functions parameters", function()
+        local buf = create_buf_with_text([[
+function1 = function(p1, p2) end
+function function2(p3, p4, p5) end
+        ]], "lua")
+
+        local root_nodes = parser.parse_sections(buf)
+
+        assert.are.same({
+            {
+                name = "function1", type = "function", position = {1, 0},
+                children = {}, parameters={"p1", "p2"}
+            },
+            {
+                name = "function2", type = "function", position = {2, 0},
+                children = {}, parameters={"p3", "p4", "p5"}
+            }
+        }, root_nodes)
     end)
 end)
