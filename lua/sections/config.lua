@@ -4,14 +4,14 @@ local _config = {
     filetypes = {
         markdown = {
             sections = {
-                { section = "@section", name = "@section.name" }
-            }
-        }
+                { section = "@section", name = "@section.name" },
+            },
+        },
     },
     icons = {
         ["function"] = "󰊕",
         header = "󰙅",
-    }
+    },
 }
 
 M.init = function(config)

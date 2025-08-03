@@ -1,4 +1,4 @@
-local utils = require('sections.utils')
+local utils = require("sections.utils")
 local ts = vim.treesitter
 
 local M = {}
@@ -40,10 +40,7 @@ local function merge_sections(sections_matches)
         else
             if section.parameters ~= nil then
                 -- We only expect the param parameter to change
-                local merged_params = utils.merge_tables(
-                    sections_by_id[node_id].parameters,
-                    section.parameters
-                )
+                local merged_params = utils.merge_tables(sections_by_id[node_id].parameters, section.parameters)
                 sections_by_id[node_id].parameters = merged_params
             end
         end
@@ -63,7 +60,6 @@ local function is_descendant(child, parent_candidate)
     if node == nil then
         return false
     end
-
 
     while node:parent() ~= nil do
         local parent = node:parent()
@@ -106,7 +102,7 @@ end
 -- @return A table containing sections parsed from the buffer if sections are successfully parsed.
 --         Otherwise, returns nil and the error message.
 M.parse_sections = function(buf_id)
-    local lang = vim.api.nvim_get_option_value('filetype', { buf = buf_id })
+    local lang = vim.api.nvim_get_option_value("filetype", { buf = buf_id })
 
     local parser = ts.get_parser(buf_id, lang, { error = false })
     if parser == nil then

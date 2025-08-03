@@ -1,4 +1,4 @@
-local utils = require('sections.utils')
+local utils = require("sections.utils")
 
 describe("should merge tables", function()
     it("should keep values from both tables", function()

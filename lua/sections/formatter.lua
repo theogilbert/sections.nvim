@@ -13,7 +13,7 @@ local function section_to_text(section, out_lines, indent)
     indent = indent or 0
 
     local prefix = string.rep(" ", indent)
-    local icon = get_section_icon(section.type) or ''
+    local icon = get_section_icon(section.type) or ""
     table.insert(out_lines, prefix .. icon .. " " .. section.name)
 
     for _, sub_section in pairs(section.children) do
@@ -63,6 +63,5 @@ M.get_section_pos = function(section_idx)
     end
     return nil
 end
-
 
 return M

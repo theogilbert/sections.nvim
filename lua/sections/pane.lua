@@ -24,16 +24,14 @@ local function on_section_selected()
     end
 end
 
-
 local function open_pane()
     local bufid = vim.api.nvim_create_buf(true, false)
     vim.bo[bufid].filetype = PANE_FILETYPE
     vim.bo[bufid].buftype = "nofile"
     vim.bo[bufid].modifiable = false
 
-    local winid = vim.api.nvim_open_win(
-        bufid, false, { vertical = true, split = "left", width = 50, style = "minimal"}
-    )
+    local winid =
+        vim.api.nvim_open_win(bufid, false, { vertical = true, split = "left", width = 50, style = "minimal" })
     vim.api.nvim_set_option_value("cursorline", true, { win = winid })
     vim.keymap.set("n", "<cr>", on_section_selected, { buffer = bufid })
 
@@ -52,10 +50,9 @@ end
 
 local function close_pane(winid)
     local bufid = vim.api.nvim_win_get_buf(winid)
-    vim.api.nvim_buf_delete(bufid, {force = true})
+    vim.api.nvim_buf_delete(bufid, { force = true })
     M.cleanup_pane()
 end
-
 
 M.cleanup_pane = function()
     local cur_tab = vim.api.nvim_get_current_tabpage()
@@ -112,7 +109,7 @@ M.refresh_pane = function(updated_buf, buf_win)
     if buf_win ~= nil then
         local win_cfg = vim.api.nvim_win_get_config(buf_win)
         if win_cfg.relative ~= "" then
-            return  -- Window is floating
+            return -- Window is floating
         end
 
         if buf_win == pane_info.pane_win then
@@ -139,6 +136,5 @@ M.refresh_pane = function(updated_buf, buf_win)
         pane_info.watched_win = buf_win
     end
 end
-
 
 return M
