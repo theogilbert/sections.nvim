@@ -1,13 +1,6 @@
 local M = {}
 
 local _config = {
-    filetypes = {
-        markdown = {
-            sections = {
-                { section = "@section", name = "@section.name" },
-            },
-        },
-    },
     icons = {
         ["function"] = "󰊕",
         class = "",
