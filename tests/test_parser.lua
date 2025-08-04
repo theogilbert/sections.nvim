@@ -186,3 +186,58 @@ function function2(p3, p4, p5) end
         }, root_nodes)
     end)
 end)
+
+describe("parsing python sections", function()
+    local parser = require("sections.parser")
+
+    local function create_python_buf(text)
+        return create_buf_with_text(text, "python")
+    end
+
+    local function assert_has_single_section(buf, type, name, params)
+        local root_nodes = parser.parse_sections(buf)
+
+        assert.are.same({
+            {
+                name = name,
+                type = type,
+                position = { 1, 0 },
+                children = {},
+                parameters = params,
+            },
+        }, root_nodes)
+    end
+
+    it("should parse function", function()
+        local buf = create_python_buf("def foo():\n  pass")
+
+        assert_has_single_section(buf, "function", "foo")
+    end)
+
+    it("should parse functions with parameters", function()
+        local buf = create_python_buf([[
+def foo(arg1: int, arg2: str, arg3, arg4=None, arg5: int = 1):
+    pass
+            ]])
+
+        assert_has_single_section(buf, "function", "foo", { "arg1", "arg2", "arg3", "arg4", "arg5" })
+    end)
+
+    it("should parse simple class", function()
+        local buf = create_python_buf("class SimpleClass:\n  pass")
+
+        assert_has_single_section(buf, "class", "SimpleClass")
+    end)
+
+    it("should parse class with parent class", function()
+        local buf = create_python_buf("class SimpleClass(Enum):\n  pass")
+
+        assert_has_single_section(buf, "class", "SimpleClass", { "Enum" })
+    end)
+
+    it("should parse class with multiple parent classes", function()
+        local buf = create_python_buf("class SimpleClass(str, Enum):\n  pass")
+
+        assert_has_single_section(buf, "class", "SimpleClass", { "str", "Enum" })
+    end)
+end)

@@ -10,7 +10,8 @@ local _config = {
     },
     icons = {
         ["function"] = "󰊕",
-        header = "󰙅",
+        class = "",
+        header = "",
     },
 }
 
