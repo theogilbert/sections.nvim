@@ -240,4 +240,38 @@ def foo(arg1: int, arg2: str, arg3, arg4=None, arg5: int = 1):
 
         assert_has_single_section(buf, "class", "SimpleClass", { "str", "Enum" })
     end)
+
+    it("should parse class attributes", function()
+        local buf = create_python_buf([[
+class SimpleClass:
+    FOO1: str
+    FOO2 = 2
+    FOO3: int = 2
+]])
+
+        local root_nodes = parser.parse_sections(buf)
+
+        local function create_attr_section(name, annotation, line)
+            return {
+                name = name,
+                type = "attribute",
+                position = { line, 4 },
+                children = {},
+                type_annotation = annotation,
+            }
+        end
+
+        assert.are.same({
+            {
+                name = "SimpleClass",
+                type = "class",
+                position = { 1, 0 },
+                children = {
+                    create_attr_section("FOO1", "str", 2),
+                    create_attr_section("FOO2", nil, 3),
+                    create_attr_section("FOO3", "int", 4),
+                },
+            },
+        }, root_nodes)
+    end)
 end)

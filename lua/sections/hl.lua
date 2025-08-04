@@ -3,15 +3,17 @@ local config = require("sections.config")
 local M = {}
 
 local DEFAULT_HIGHLIGHTS = {
-    SectionsFunction = { fg = "#61AFEF", bold = true },
-    SectionsClass = { fg = "#E06C75", bold = true },
-    SectionsHeader = { fg = "#98C379", bold = true },
+    SectionsFunction = { fg = "#F47648", bold = true },
+    SectionsClass = { fg = "#73D0FF", bold = true },
+    SectionsAttribute = { fg = "#40BA93", bold = true },
+    SectionsHeader = { fg = "#8ED0B2", bold = true },
 }
 
 local SECTIONS_HIGHLIGHTS = {
     ["function"] = "SectionsFunction",
     class = "SectionsClass",
     header = "SectionsHeader",
+    attribute = "SectionsAttribute",
 }
 
 local function setup_highlights()

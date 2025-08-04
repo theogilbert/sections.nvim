@@ -3,6 +3,8 @@ local ts = vim.treesitter
 
 local M = {}
 
+local SUPPORTED_CAPTURES = { "section.name", "section.type_annotation" }
+
 local function build_section(match, metadata, query_info, buf_id)
     local current_section = { children = {} }
 
@@ -15,14 +17,22 @@ local function build_section(match, metadata, query_info, buf_id)
                 current_section.position = { sr + 1, sc }
                 current_section.type = metadata.type
                 current_section.node = node
-            elseif capture_name == "section.name" then
-                current_section.name = ts.get_node_text(node, buf_id)
             elseif capture_name == "section.param" then
                 if current_section.parameters == nil then
                     current_section.parameters = {}
                 end
 
                 table.insert(current_section.parameters, ts.get_node_text(node, buf_id))
+            elseif vim.startswith(capture_name, "section.") then
+                local attr_name = string.sub(capture_name, 9)
+                if vim.tbl_contains(SUPPORTED_CAPTURES, capture_name) then
+                    current_section[attr_name] = ts.get_node_text(node, buf_id)
+                else
+                    vim.notify(
+                        "Capture " .. capture_name .. " is not supported and has been ignored.",
+                        vim.log.levels.WARN
+                    )
+                end
             end
         end
     end

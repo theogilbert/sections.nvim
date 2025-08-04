@@ -5,6 +5,7 @@ local _config = {
     icons = {
         ["function"] = "󰊕",
         class = "",
+        attribute = "󰠲",
         header = "",
     },
 }

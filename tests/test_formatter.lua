@@ -6,6 +6,7 @@ describe("should display sections", function()
         icons = {
             ["function"] = "f",
             header = "#",
+            attribute = "󰠲",
         },
     })
 
@@ -93,6 +94,35 @@ describe("should display sections", function()
         local lines = formatter.format()
 
         assert.are.same({ "f foo(abc, bar)" }, lines)
+    end)
+
+    it("should format attribute section", function()
+        formatter.update_sections({
+            {
+                name = "bar",
+                type = "attribute",
+                children = {},
+            },
+        })
+
+        local lines = formatter.format()
+
+        assert.are.same({ "󰠲 bar" }, lines)
+    end)
+
+    it("should format attribute section with type annotation", function()
+        formatter.update_sections({
+            {
+                name = "bar",
+                type = "attribute",
+                type_annotation = "int",
+                children = {},
+            },
+        })
+
+        local lines = formatter.format()
+
+        assert.are.same({ "󰠲 bar: int" }, lines)
     end)
 
     it("should not collapse section when it has no child", function()

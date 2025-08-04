@@ -17,6 +17,8 @@ local function get_section_text(section)
         else
             suffix = "(" .. table.concat(section.parameters, ", ") .. ")"
         end
+    elseif section.type == "attribute" and section.type_annotation ~= nil then
+        suffix = ": " .. section.type_annotation
     end
 
     return section.name .. suffix
