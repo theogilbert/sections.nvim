@@ -26,15 +26,12 @@ local function define_syntax_match_rules(buf)
     local cfg = config.get_config()
 
     vim.api.nvim_buf_call(buf, function()
-        print("Defining rules for buffer " .. vim.inspect(buf))
         vim.cmd("syntax enable")
         for type, icon in pairs(cfg.icons) do
             local hl_group = SECTIONS_HIGHLIGHTS[type]
             local cmd = string.format([[syntax match %s /%s/]], hl_group, icon)
-            print("Running cmd: " .. cmd)
             vim.cmd(cmd)
         end
-        print("Done")
     end)
 end
 
