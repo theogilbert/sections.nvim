@@ -94,6 +94,44 @@ describe("should display sections", function()
 
         assert.are.same({ "f foo(abc, bar)" }, lines)
     end)
+
+    it("should not collapse section when it has no child", function()
+        formatter.update_sections({
+            {
+                name = "foo",
+                type = "function",
+                children = {},
+                parameters = { "abc", "bar" },
+            },
+        })
+
+        formatter.collapse(1)
+        local lines = formatter.format()
+
+        assert.are.same({ "f foo(abc, bar)" }, lines)
+    end)
+
+    it("should collapse section", function()
+        formatter.update_sections({
+            {
+                name = "foo",
+                type = "function",
+                children = {
+                    {
+                        name = "foo",
+                        type = "function",
+                        children = {},
+                    },
+                },
+            },
+        })
+
+        formatter.collapse(1)
+        assert.are.same({ "f foo() ..." }, formatter.format())
+
+        formatter.collapse(1)
+        assert.are.same({ "f foo()", "  f foo()" }, formatter.format())
+    end)
 end)
 
 describe("should get section pos", function()

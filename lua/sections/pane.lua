@@ -24,6 +24,24 @@ local function on_section_selected()
     end
 end
 
+local function refresh_pane_content(lines)
+    local pane_info = get_pane_info()
+    if pane_info == nil then
+        return
+    end
+
+    local pane_buf = pane_info.pane_buf
+    vim.bo[pane_buf].modifiable = true
+    vim.api.nvim_buf_set_lines(pane_buf, 0, -1, false, lines)
+    vim.bo[pane_buf].modifiable = false
+end
+
+local function on_section_toggle()
+    local cur_line = vim.api.nvim_win_get_cursor(0)[1]
+    formatter.collapse(cur_line)
+    refresh_pane_content(formatter.format())
+end
+
 local function open_pane()
     local bufid = vim.api.nvim_create_buf(true, false)
     vim.bo[bufid].filetype = PANE_FILETYPE
@@ -33,7 +51,8 @@ local function open_pane()
     local winid =
         vim.api.nvim_open_win(bufid, false, { vertical = true, split = "left", width = 50, style = "minimal" })
     vim.api.nvim_set_option_value("cursorline", true, { win = winid })
-    vim.keymap.set("n", "<cr>", on_section_selected, { buffer = bufid })
+    vim.keymap.set("n", "<C-]>", on_section_selected, { buffer = bufid })
+    vim.keymap.set("n", "<cr>", on_section_toggle, { buffer = bufid })
 
     local tab = vim.api.nvim_get_current_tabpage()
     local watched_buf = vim.api.nvim_get_current_buf()
@@ -126,10 +145,7 @@ M.refresh_pane = function(updated_buf, buf_win)
         lines = { err }
     end
 
-    local pane_buf = pane_info.pane_buf
-    vim.bo[pane_buf].modifiable = true
-    vim.api.nvim_buf_set_lines(pane_buf, 0, -1, false, lines)
-    vim.bo[pane_buf].modifiable = false
+    refresh_pane_content(lines)
 
     pane_info.watched_buf = updated_buf
     if buf_win ~= nil then
