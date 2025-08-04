@@ -35,3 +35,15 @@
   )
   (#set! type "attribute")
 )
+
+(
+  (module
+    (expression_statement
+      (assignment
+        left: (identifier) @section.name
+        type: (type (identifier) @section.type_annotation)?
+        )
+      ) @section
+  )
+  (#set! type "attribute")
+)

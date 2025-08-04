@@ -274,4 +274,49 @@ class SimpleClass:
             },
         }, root_nodes)
     end)
+
+    it("should parse module attributes", function()
+        local buf = create_python_buf([[
+FOO1: str
+FOO2 = 2
+FOO3: int = 2
+]])
+
+        local root_nodes = parser.parse_sections(buf)
+
+        local function create_attr_section(name, annotation, line)
+            return {
+                name = name,
+                type = "attribute",
+                position = { line, 0 },
+                children = {},
+                type_annotation = annotation,
+            }
+        end
+
+        assert.are.same({
+            create_attr_section("FOO1", "str", 1),
+            create_attr_section("FOO2", nil, 2),
+            create_attr_section("FOO3", "int", 3),
+        }, root_nodes)
+    end)
+    it("should not parse function attributes", function()
+        local buf = create_python_buf([[
+def foo():
+    FOO1: str
+    FOO2 = 2
+    FOO3: int = 2
+]])
+
+        local root_nodes = parser.parse_sections(buf)
+
+        assert.are.same({
+            {
+                name = "foo",
+                type = "function",
+                position = { 1, 0 },
+                children = {},
+            },
+        }, root_nodes)
+    end)
 end)
