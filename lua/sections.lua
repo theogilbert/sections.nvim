@@ -1,5 +1,6 @@
 local init_config = require("sections.config").init
 local pane = require("sections.pane")
+local hl = require("sections.hl")
 
 local M = {}
 
@@ -51,6 +52,7 @@ end
 M.setup = function(config)
     init_config(config)
     setup_autocommands()
+    hl.setup()
 end
 
 return M
