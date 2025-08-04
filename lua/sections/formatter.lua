@@ -6,7 +6,7 @@ local _sections = {}
 
 local function get_section_icon(section_type)
     local cfg = config.get_config()
-    return cfg.icons[section_type]
+    return cfg.icons[section_type] or " "
 end
 
 local function get_section_text(section)
@@ -22,16 +22,28 @@ local function get_section_text(section)
     return section.name .. suffix
 end
 
-local function write_sections(section, out_lines, indent)
-    indent = indent or 0
-
-    local prefix = string.rep(" ", indent)
-    local icon = get_section_icon(section.type) or ""
+local function get_section_line(section, cfg, depth)
+    local prefix = string.rep(" ", depth * cfg.indent)
+    local icon = get_section_icon(section.type)
     local text = get_section_text(section)
-    table.insert(out_lines, prefix .. icon .. " " .. text)
+    local suffix = ""
 
-    for _, sub_section in pairs(section.children) do
-        write_sections(sub_section, out_lines, indent + 2)
+    if section.collapsed and #section.children > 0 then
+        suffix = " ..."
+    end
+
+    return prefix .. icon .. " " .. text .. suffix
+end
+
+local function write_sections(section, out_lines, cfg, depth)
+    depth = depth or 0
+
+    table.insert(out_lines, get_section_line(section, cfg, depth))
+
+    if not section.collapsed then
+        for _, sub_section in pairs(section.children) do
+            write_sections(sub_section, out_lines, cfg, depth + 1)
+        end
     end
 end
 
@@ -40,10 +52,11 @@ M.update_sections = function(sections)
 end
 
 M.format = function()
+    local cfg = config.get_config()
     local lines = {}
 
     for _, section in pairs(_sections) do
-        write_sections(section, lines)
+        write_sections(section, lines, cfg)
     end
 
     return lines
@@ -76,6 +89,16 @@ M.get_section_pos = function(section_idx)
         return section.position
     end
     return nil
+end
+
+M.collapse = function(line)
+    local section = get_nth_section(_sections, line)
+
+    if section == nil then
+        return
+    end
+
+    section.collapsed = not section.collapsed
 end
 
 return M
