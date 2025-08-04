@@ -241,6 +241,33 @@ def foo(arg1: int, arg2: str, arg3, arg4=None, arg5: int = 1):
         assert_has_single_section(buf, "class", "SimpleClass", { "str", "Enum" })
     end)
 
+    it("should parse method with multiple parameters", function()
+        local buf = create_python_buf([[
+class Arbiter:
+    def kill_worker(self, pid, sig):
+        pass
+        ]])
+
+        local root_nodes = parser.parse_sections(buf)
+
+        assert.are.same({
+            {
+                name = "Arbiter",
+                type = "class",
+                position = { 1, 0 },
+                children = {
+                    {
+                        name = "kill_worker",
+                        type = "function",
+                        position = { 2, 4 },
+                        children = {},
+                        parameters = { "self", "pid", "sig" },
+                    },
+                },
+            },
+        }, root_nodes)
+    end)
+
     it("should parse class attributes", function()
         local buf = create_python_buf([[
 class SimpleClass:

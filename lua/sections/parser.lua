@@ -44,6 +44,10 @@ local function merge_sections(sections_matches)
     local sections_by_id = {}
 
     for _, section in ipairs(sections_matches) do
+        if #section.children > 1 then
+            section.children = merge_sections(section.children)
+        end
+
         local node_id = section.node:id()
         if sections_by_id[node_id] == nil then
             sections_by_id[node_id] = section
@@ -60,6 +64,11 @@ local function merge_sections(sections_matches)
     for _, section in pairs(sections_by_id) do
         table.insert(sections, section)
     end
+
+    table.sort(sections, function(s1, s2)
+        return s1.position[1] < s2.position[1]
+    end)
+
     return sections
 end
 
@@ -144,10 +153,6 @@ M.parse_sections = function(buf_id)
     end
 
     local sections = merge_sections(sections_match)
-
-    table.sort(sections, function(s1, s2)
-        return s1.position[1] < s2.position[1]
-    end)
 
     return cleanup_internal_data_from_sections(sections), nil
 end

@@ -1,4 +1,3 @@
--- TODO add colored prefix icon depending on capture type
 -- TODO parse public/private functions
 local parser = require("sections.parser")
 local formatter = require("sections.formatter")
@@ -19,9 +18,11 @@ local function on_section_selected()
     local cur_line = vim.api.nvim_win_get_cursor(0)[1]
     local pos = formatter.get_section_pos(cur_line)
 
-    if pos ~= nil then
-        vim.api.nvim_win_set_cursor(info.watched_win, pos)
+    if pos == nil then
+        return
     end
+
+    vim.api.nvim_win_set_cursor(info.watched_win, pos)
 end
 
 local function refresh_pane_content(lines)
