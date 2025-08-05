@@ -51,6 +51,7 @@ local function open_pane()
 
     local winid =
         vim.api.nvim_open_win(bufid, false, { vertical = true, split = "left", width = 50, style = "minimal" })
+    vim.wo[winid].wrap = false
     vim.api.nvim_set_option_value("cursorline", true, { win = winid })
     vim.keymap.set("n", "<C-]>", on_section_selected, { buffer = bufid })
     vim.keymap.set("n", "<cr>", on_section_toggle, { buffer = bufid })
