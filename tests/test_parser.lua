@@ -299,14 +299,28 @@ def _foo():
 
     it("should parse private class", function()
         local buf = create_python_buf([[
-class _Foo():
+class _Foo:
     pass
 ]])
         local root_nodes = parser.parse_sections(buf)
-        local expected_fn = build_class("_Foo", { 1, 0 })
+        local expected_cls = build_class("_Foo", { 1, 0 })
+        expected_cls.private = true
+
+        assert.are.same({ expected_cls }, root_nodes)
+    end)
+
+    it("should parse private class attribute", function()
+        local buf = create_python_buf([[
+class Foo:
+    _BAR: int
+]])
+        local root_nodes = parser.parse_sections(buf)
+        local expected_fn = build_attribute("_BAR", "int", { 2, 4 })
         expected_fn.private = true
 
-        assert.are.same({ expected_fn }, root_nodes)
+        assert.are.same({
+            build_class("Foo", {1, 0}, nil, { expected_fn })
+        }, root_nodes)
     end)
 
 end)
