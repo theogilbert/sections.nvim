@@ -15,6 +15,7 @@ describe("should parse markdown sections", function()
             type = "header",
             position = { line, 0 },
             children = children or {},
+            private = false,
         }
     end
 
@@ -92,6 +93,7 @@ describe("parsing lua sections", function()
             position = { line, 0 },
             children = {},
             parameters = params,
+            private = false,
         }
     end
 
@@ -158,6 +160,7 @@ describe("parsing python sections", function()
             position = pos,
             children = {},
             parameters = params,
+            private = false,
         }
     end
 
@@ -168,6 +171,7 @@ describe("parsing python sections", function()
             position = pos,
             children = children or {},
             parameters = params,
+            private = false,
         }
     end
 
@@ -178,6 +182,7 @@ describe("parsing python sections", function()
             position = pos,
             children = {},
             type_annotation = annotation,
+            private = false,
         }
     end
 
@@ -278,5 +283,17 @@ def foo():
         local root_nodes = parser.parse_sections(buf)
 
         assert.are.same({ build_function("foo", { 1, 0 }) }, root_nodes)
+    end)
+
+    it("should parse private function", function()
+        local buf = create_python_buf([[
+def _foo():
+    pass
+]])
+        local root_nodes = parser.parse_sections(buf)
+        local expected_fn = build_function("_foo", { 1, 0 })
+        expected_fn.private = true
+
+        assert.are.same({ expected_fn }, root_nodes)
     end)
 end)

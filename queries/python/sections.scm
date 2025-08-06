@@ -10,6 +10,24 @@
       ]
     )?
   ) @section
+  (#not-match? @section.name "^_")
+  (#set! type "function")
+)
+
+(
+  (function_definition
+    name: (identifier) @section.name
+    parameters: (parameters
+      [
+        (identifier) @section.param
+        (typed_parameter (identifier) @section.param)
+        (default_parameter name: (identifier) @section.param)
+        (typed_default_parameter name: (identifier) @section.param)
+      ]
+    )?
+  ) @section
+  (#match? @section.name "^_")
+  (#set! private "true")
   (#set! type "function")
 )
 
