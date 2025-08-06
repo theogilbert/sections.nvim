@@ -9,7 +9,7 @@ local function get_section_icon(section_type)
     return cfg.icons[section_type] or " "
 end
 
-local function get_section_text(section)
+local function get_section_name(section)
     local suffix = ""
     if section.type == "function" then
         if section.parameters == nil then
@@ -24,10 +24,10 @@ local function get_section_text(section)
     return section.name .. suffix
 end
 
-local function get_section_line(section, cfg, depth)
+local function get_section_text(section, cfg, depth)
     local prefix = string.rep(" ", depth * cfg.indent)
     local icon = get_section_icon(section.type)
-    local text = get_section_text(section)
+    local text = get_section_name(section)
     local suffix = ""
 
     if section.collapsed and #section.children > 0 then
@@ -37,16 +37,27 @@ local function get_section_line(section, cfg, depth)
     return prefix .. icon .. " " .. text .. suffix
 end
 
-local function write_sections(section, out_lines, cfg, depth)
+local function build_sections_sequence_recursively(sequence, section, cfg, depth)
     depth = depth or 0
 
-    table.insert(out_lines, get_section_line(section, cfg, depth))
+    local section_line = { depth = depth, value = section }
+    table.insert(sequence, section_line)
 
     if not section.collapsed then
         for _, sub_section in pairs(section.children) do
-            write_sections(sub_section, out_lines, cfg, depth + 1)
+            build_sections_sequence_recursively(sequence, sub_section, cfg, depth + 1)
         end
     end
+end
+
+local function build_sections_sequence(cfg)
+    local sequence = {}
+
+    for _, section in pairs(_sections) do
+        build_sections_sequence_recursively(sequence, section, cfg)
+    end
+
+    return sequence
 end
 
 M.update_sections = function(sections)
@@ -55,38 +66,31 @@ end
 
 M.format = function()
     local cfg = config.get_config()
-    local lines = {}
 
-    for _, section in pairs(_sections) do
-        write_sections(section, lines, cfg)
+    local lines = {}
+    local sequence = build_sections_sequence(cfg)
+
+    for _, section_line in pairs(sequence) do
+        local text = get_section_text(section_line.value, cfg, section_line.depth)
+        table.insert(lines, text)
     end
 
     return lines
 end
 
-local function get_nth_section(sections, n, current_idx)
-    current_idx = current_idx or 0
+local function get_nth_section(n)
+    local cfg = config.get_config()
+    local sequence = build_sections_sequence(cfg)
 
-    for _, section in pairs(sections) do
-        current_idx = current_idx + 1
-
-        if current_idx == n then
-            return section, current_idx
-        end
-
-        local matching_sub_section, new_idx = get_nth_section(section.children, n, current_idx)
-        if matching_sub_section ~= nil then
-            return matching_sub_section, new_idx
-        else
-            current_idx = new_idx
-        end
+    if n > #sequence then
+        return nil
     end
 
-    return nil, current_idx
+    return sequence[n].value
 end
 
 M.get_section_pos = function(section_idx)
-    local section = get_nth_section(_sections, section_idx)
+    local section = get_nth_section(section_idx)
     if section ~= nil then
         return section.position
     end
@@ -94,7 +98,7 @@ M.get_section_pos = function(section_idx)
 end
 
 M.collapse = function(line)
-    local section = get_nth_section(_sections, line)
+    local section = get_nth_section(line)
 
     if section == nil then
         return
