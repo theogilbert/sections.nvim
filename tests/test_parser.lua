@@ -296,4 +296,17 @@ def _foo():
 
         assert.are.same({ expected_fn }, root_nodes)
     end)
+
+    it("should parse private class", function()
+        local buf = create_python_buf([[
+class _Foo():
+    pass
+]])
+        local root_nodes = parser.parse_sections(buf)
+        local expected_fn = build_class("_Foo", { 1, 0 })
+        expected_fn.private = true
+
+        assert.are.same({ expected_fn }, root_nodes)
+    end)
+
 end)

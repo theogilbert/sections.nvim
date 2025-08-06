@@ -37,6 +37,17 @@
     name: (identifier) @section.name
     superclasses: (argument_list (identifier) @section.param)*
   ) @section
+  (#not-match? @section.name "^_")
+  (#set! type "class")
+)
+
+(
+  (class_definition
+    name: (identifier) @section.name
+    superclasses: (argument_list (identifier) @section.param)*
+  ) @section
+  (#match? @section.name "^_")
+  (#set! private "true")
   (#set! type "class")
 )
 
