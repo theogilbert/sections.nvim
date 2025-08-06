@@ -3,6 +3,7 @@ local config = require("sections.config")
 local M = {}
 
 local _sections = {}
+local _show_private_sections = true
 
 local function get_section_icon(section_type)
     local cfg = config.get_config()
@@ -40,6 +41,10 @@ end
 local function build_sections_sequence_recursively(sequence, section, cfg, depth)
     depth = depth or 0
 
+    if section.private and not _show_private_sections then
+        return
+    end
+
     local section_line = { depth = depth, value = section }
     table.insert(sequence, section_line)
 
@@ -50,7 +55,7 @@ local function build_sections_sequence_recursively(sequence, section, cfg, depth
     end
 end
 
-local function build_sections_sequence(cfg)
+local function unwrap_sections_into_sequence(cfg)
     local sequence = {}
 
     for _, section in pairs(_sections) do
@@ -68,7 +73,7 @@ M.format = function()
     local cfg = config.get_config()
 
     local lines = {}
-    local sequence = build_sections_sequence(cfg)
+    local sequence = unwrap_sections_into_sequence(cfg)
 
     for _, section_line in pairs(sequence) do
         local text = get_section_text(section_line.value, cfg, section_line.depth)
@@ -80,7 +85,7 @@ end
 
 local function get_nth_section(n)
     local cfg = config.get_config()
-    local sequence = build_sections_sequence(cfg)
+    local sequence = unwrap_sections_into_sequence(cfg)
 
     if n > #sequence then
         return nil
@@ -105,6 +110,10 @@ M.collapse = function(line)
     end
 
     section.collapsed = not section.collapsed
+end
+
+M.toggle_private = function()
+    _show_private_sections = not _show_private_sections
 end
 
 return M

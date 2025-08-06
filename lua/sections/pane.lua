@@ -43,6 +43,11 @@ local function on_section_toggle()
     refresh_pane_content(formatter.format())
 end
 
+local function on_private_toggle()
+    formatter.toggle_private()
+    refresh_pane_content(formatter.format())
+end
+
 local function open_pane()
     local bufid = vim.api.nvim_create_buf(true, false)
     vim.bo[bufid].filetype = PANE_FILETYPE
@@ -55,6 +60,7 @@ local function open_pane()
     vim.api.nvim_set_option_value("cursorline", true, { win = winid })
     vim.keymap.set("n", "<C-]>", on_section_selected, { buffer = bufid })
     vim.keymap.set("n", "<cr>", on_section_toggle, { buffer = bufid })
+    vim.keymap.set("n", "p", on_private_toggle, { buffer = bufid })
 
     local tab = vim.api.nvim_get_current_tabpage()
     local watched_buf = vim.api.nvim_get_current_buf()
