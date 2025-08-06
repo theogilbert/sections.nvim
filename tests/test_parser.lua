@@ -315,12 +315,22 @@ class Foo:
     _BAR: int
 ]])
         local root_nodes = parser.parse_sections(buf)
-        local expected_fn = build_attribute("_BAR", "int", { 2, 4 })
-        expected_fn.private = true
+        local expected_attr = build_attribute("_BAR", "int", { 2, 4 })
+        expected_attr.private = true
 
         assert.are.same({
-            build_class("Foo", {1, 0}, nil, { expected_fn })
+            build_class("Foo", { 1, 0 }, nil, { expected_attr }),
         }, root_nodes)
     end)
 
+    it("should parse private module attribute", function()
+        local buf = create_python_buf([[
+_BAR = 123
+]])
+        local root_nodes = parser.parse_sections(buf)
+        local expected_attr = build_attribute("_BAR", nil, { 1, 0 })
+        expected_attr.private = true
+
+        assert.are.same({ expected_attr }, root_nodes)
+    end)
 end)

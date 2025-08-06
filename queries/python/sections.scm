@@ -91,5 +91,20 @@
         )
       ) @section
   )
+  (#not-match? @section.name "^_")
+  (#set! type "attribute")
+)
+
+(
+  (module
+    (expression_statement
+      (assignment
+        left: (identifier) @section.name
+        type: (type (identifier) @section.type_annotation)?
+        )
+      ) @section
+  )
+  (#match? @section.name "^_")
+  (#set! private "true")
   (#set! type "attribute")
 )
