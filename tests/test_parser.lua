@@ -9,6 +9,15 @@ end
 describe("should parse markdown sections", function()
     local parser = require("sections.parser")
 
+    local function build_header(name, line, children)
+        return {
+            name = name,
+            type = "header",
+            position = { line, 0 },
+            children = children or {},
+        }
+    end
+
     it("parse subsequent headers", function()
         local buf = create_buf_with_text(
             [[
@@ -26,18 +35,8 @@ Bar
         local root_nodes = parser.parse_sections(buf)
 
         assert.are.same({
-            {
-                name = "First header",
-                type = "header",
-                position = { 1, 0 },
-                children = {},
-            },
-            {
-                name = "Second header",
-                type = "header",
-                position = { 5, 0 },
-                children = {},
-            },
+            build_header("First header", 1),
+            build_header("Second header", 5),
         }, root_nodes)
     end)
 
@@ -53,19 +52,9 @@ Bar
         local root_nodes = parser.parse_sections(buf)
 
         assert.are.same({
-            {
-                name = "Parent header",
-                type = "header",
-                position = { 1, 0 },
-                children = {
-                    {
-                        name = "Sub header",
-                        type = "header",
-                        position = { 2, 0 },
-                        children = {},
-                    },
-                },
-            },
+            build_header("Parent header", 1, {
+                build_header("Sub header", 2),
+            }),
         }, root_nodes)
     end)
 
@@ -83,38 +72,28 @@ Bar
         local root_nodes = parser.parse_sections(buf)
 
         assert.are.same({
-            {
-                name = "Parent header",
-                type = "header",
-                position = { 1, 0 },
-                children = {
-                    {
-                        name = "Sub header",
-                        type = "header",
-                        position = { 2, 0 },
-                        children = {
-                            {
-                                name = "Sub sub header",
-                                type = "header",
-                                position = { 3, 0 },
-                                children = {},
-                            },
-                        },
-                    },
-                    {
-                        name = "Sub header 2",
-                        type = "header",
-                        position = { 4, 0 },
-                        children = {},
-                    },
-                },
-            },
+            build_header("Parent header", 1, {
+                build_header("Sub header", 2, {
+                    build_header("Sub sub header", 3),
+                }),
+                build_header("Sub header 2", 4),
+            }),
         }, root_nodes)
     end)
 end)
 
 describe("parsing lua sections", function()
     local parser = require("sections.parser")
+
+    local function build_function(name, line, params)
+        return {
+            name = name,
+            type = "function",
+            position = { line, 0 },
+            children = {},
+            parameters = params,
+        }
+    end
 
     it("should parse subsequent functions", function()
         local buf = create_buf_with_text(
@@ -128,18 +107,8 @@ function function2() end
         local root_nodes = parser.parse_sections(buf)
 
         assert.are.same({
-            {
-                name = "function1",
-                type = "function",
-                position = { 1, 0 },
-                children = {},
-            },
-            {
-                name = "function2",
-                type = "function",
-                position = { 2, 0 },
-                children = {},
-            },
+            build_function("function1", 1),
+            build_function("function2", 2),
         }, root_nodes)
     end)
 
@@ -169,20 +138,8 @@ function function2(p3, p4, p5) end
         local root_nodes = parser.parse_sections(buf)
 
         assert.are.same({
-            {
-                name = "function1",
-                type = "function",
-                position = { 1, 0 },
-                children = {},
-                parameters = { "p1", "p2" },
-            },
-            {
-                name = "function2",
-                type = "function",
-                position = { 2, 0 },
-                children = {},
-                parameters = { "p3", "p4", "p5" },
-            },
+            build_function("function1", 1, { "p1", "p2" }),
+            build_function("function2", 2, { "p3", "p4", "p5" }),
         }, root_nodes)
     end)
 end)
@@ -194,24 +151,41 @@ describe("parsing python sections", function()
         return create_buf_with_text(text, "python")
     end
 
-    local function assert_has_single_section(buf, type, name, params)
-        local root_nodes = parser.parse_sections(buf)
+    local function build_function(name, pos, params)
+        return {
+            name = name,
+            type = "function",
+            position = pos,
+            children = {},
+            parameters = params,
+        }
+    end
 
-        assert.are.same({
-            {
-                name = name,
-                type = type,
-                position = { 1, 0 },
-                children = {},
-                parameters = params,
-            },
-        }, root_nodes)
+    local function build_class(name, pos, params, children)
+        return {
+            name = name,
+            type = "class",
+            position = pos,
+            children = children or {},
+            parameters = params,
+        }
+    end
+
+    local function build_attribute(name, annotation, pos)
+        return {
+            name = name,
+            type = "attribute",
+            position = pos,
+            children = {},
+            type_annotation = annotation,
+        }
     end
 
     it("should parse function", function()
         local buf = create_python_buf("def foo():\n  pass")
+        local root_nodes = parser.parse_sections(buf)
 
-        assert_has_single_section(buf, "function", "foo")
+        assert.are.same({ build_function("foo", { 1, 0 }) }, root_nodes)
     end)
 
     it("should parse functions with parameters", function()
@@ -219,26 +193,30 @@ describe("parsing python sections", function()
 def foo(arg1: int, arg2: str, arg3, arg4=None, arg5: int = 1):
     pass
             ]])
+        local root_nodes = parser.parse_sections(buf)
 
-        assert_has_single_section(buf, "function", "foo", { "arg1", "arg2", "arg3", "arg4", "arg5" })
+        assert.are.same({ build_function("foo", { 1, 0 }, { "arg1", "arg2", "arg3", "arg4", "arg5" }) }, root_nodes)
     end)
 
     it("should parse simple class", function()
         local buf = create_python_buf("class SimpleClass:\n  pass")
+        local root_nodes = parser.parse_sections(buf)
 
-        assert_has_single_section(buf, "class", "SimpleClass")
+        assert.are.same({ build_class("SimpleClass", { 1, 0 }) }, root_nodes)
     end)
 
     it("should parse class with parent class", function()
         local buf = create_python_buf("class SimpleClass(Enum):\n  pass")
+        local root_nodes = parser.parse_sections(buf)
 
-        assert_has_single_section(buf, "class", "SimpleClass", { "Enum" })
+        assert.are.same({ build_class("SimpleClass", { 1, 0 }, { "Enum" }) }, root_nodes)
     end)
 
     it("should parse class with multiple parent classes", function()
         local buf = create_python_buf("class SimpleClass(str, Enum):\n  pass")
+        local root_nodes = parser.parse_sections(buf)
 
-        assert_has_single_section(buf, "class", "SimpleClass", { "str", "Enum" })
+        assert.are.same({ build_class("SimpleClass", { 1, 0 }, { "str", "Enum" }) }, root_nodes)
     end)
 
     it("should parse method with multiple parameters", function()
@@ -247,24 +225,12 @@ class Arbiter:
     def kill_worker(self, pid, sig):
         pass
         ]])
-
         local root_nodes = parser.parse_sections(buf)
 
         assert.are.same({
-            {
-                name = "Arbiter",
-                type = "class",
-                position = { 1, 0 },
-                children = {
-                    {
-                        name = "kill_worker",
-                        type = "function",
-                        position = { 2, 4 },
-                        children = {},
-                        parameters = { "self", "pid", "sig" },
-                    },
-                },
-            },
+            build_class("Arbiter", { 1, 0 }, nil, {
+                build_function("kill_worker", { 2, 4 }, { "self", "pid", "sig" }),
+            }),
         }, root_nodes)
     end)
 
@@ -275,30 +241,14 @@ class SimpleClass:
     FOO2 = 2
     FOO3: int = 2
 ]])
-
         local root_nodes = parser.parse_sections(buf)
 
-        local function create_attr_section(name, annotation, line)
-            return {
-                name = name,
-                type = "attribute",
-                position = { line, 4 },
-                children = {},
-                type_annotation = annotation,
-            }
-        end
-
         assert.are.same({
-            {
-                name = "SimpleClass",
-                type = "class",
-                position = { 1, 0 },
-                children = {
-                    create_attr_section("FOO1", "str", 2),
-                    create_attr_section("FOO2", nil, 3),
-                    create_attr_section("FOO3", "int", 4),
-                },
-            },
+            build_class("SimpleClass", { 1, 0 }, nil, {
+                build_attribute("FOO1", "str", { 2, 4 }),
+                build_attribute("FOO2", nil, { 3, 4 }),
+                build_attribute("FOO3", "int", { 4, 4 }),
+            }),
         }, root_nodes)
     end)
 
@@ -308,25 +258,15 @@ FOO1: str
 FOO2 = 2
 FOO3: int = 2
 ]])
-
         local root_nodes = parser.parse_sections(buf)
 
-        local function create_attr_section(name, annotation, line)
-            return {
-                name = name,
-                type = "attribute",
-                position = { line, 0 },
-                children = {},
-                type_annotation = annotation,
-            }
-        end
-
         assert.are.same({
-            create_attr_section("FOO1", "str", 1),
-            create_attr_section("FOO2", nil, 2),
-            create_attr_section("FOO3", "int", 3),
+            build_attribute("FOO1", "str", { 1, 0 }),
+            build_attribute("FOO2", nil, { 2, 0 }),
+            build_attribute("FOO3", "int", { 3, 0 }),
         }, root_nodes)
     end)
+
     it("should not parse function attributes", function()
         local buf = create_python_buf([[
 def foo():
@@ -337,13 +277,6 @@ def foo():
 
         local root_nodes = parser.parse_sections(buf)
 
-        assert.are.same({
-            {
-                name = "foo",
-                type = "function",
-                position = { 1, 0 },
-                children = {},
-            },
-        }, root_nodes)
+        assert.are.same({ build_function("foo", { 1, 0 }) }, root_nodes)
     end)
 end)
