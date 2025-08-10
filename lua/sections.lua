@@ -16,7 +16,6 @@ local function setup_autocommands()
             end
         end,
     })
-    -- When entering a window, if it's not
     vim.api.nvim_create_autocmd({ "BufWinEnter", "WinEnter" }, {
         group = group,
         callback = function(args)
@@ -28,7 +27,7 @@ local function setup_autocommands()
     })
     vim.api.nvim_create_autocmd("BufWinEnter", {
         group = group,
-        callback = function(args)
+        callback = function()
             local win = vim.api.nvim_get_current_win()
             if win == pane.get_pane_win() then
                 pane.toggle_pane()
