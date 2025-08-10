@@ -116,4 +116,8 @@ M.toggle_private = function()
     _show_private_sections = not _show_private_sections
 end
 
+M.shows_private_sections = function()
+    return _show_private_sections
+end
+
 return M

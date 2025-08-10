@@ -24,6 +24,14 @@ local function on_section_selected()
     vim.api.nvim_win_set_cursor(info.watched_win, pos)
 end
 
+local function get_header_line()
+    if formatter.shows_private_sections() then
+        return "󰈈 - Private sections are visible"
+    else
+        return "󰈉 - Private sections are hidden"
+    end
+end
+
 local function refresh_pane_content(lines)
     local pane_info = get_pane_info()
     if pane_info == nil then
@@ -31,9 +39,12 @@ local function refresh_pane_content(lines)
     end
 
     local pane_buf = pane_info.pane_buf
+    local cursor = vim.api.nvim_win_get_cursor(pane_info.pane_win)
     vim.bo[pane_buf].modifiable = true
-    vim.api.nvim_buf_set_lines(pane_buf, 0, -1, false, lines)
+    vim.api.nvim_buf_set_lines(pane_buf, 0, -1, false, { get_header_line() })
+    vim.api.nvim_buf_set_lines(pane_buf, 1, -1, false, lines)
     vim.bo[pane_buf].modifiable = false
+    vim.api.nvim_win_set_cursor(pane_info.pane_win, cursor)
 end
 
 local function on_section_toggle()
