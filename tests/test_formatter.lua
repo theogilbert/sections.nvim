@@ -26,9 +26,7 @@ describe("should display sections", function()
             },
         }
 
-        formatter.update_sections(sections)
-
-        assert.are.same({ "# First header", "# Second header" }, formatter.format())
+        assert.are.same({ "# First header", "# Second header" }, formatter.format(sections, true))
     end)
 
     it("should format nested sections", function()
@@ -48,101 +46,99 @@ describe("should display sections", function()
             },
         }
 
-        formatter.update_sections(sections)
-
-        assert.are.same({ "# Parent header", "  # Sub header" }, formatter.format())
+        assert.are.same({ "# Parent header", "  # Sub header" }, formatter.format(sections, true))
     end)
 
     it("should format header section", function()
-        formatter.update_sections({
+        local sections = {
             {
                 name = "First header",
                 type = "header",
                 children = {},
             },
-        })
+        }
 
-        local lines = formatter.format()
+        local lines = formatter.format(sections, true)
 
         assert.are.same({ "# First header" }, lines)
     end)
 
     it("should format function section", function()
-        formatter.update_sections({
+        local sections = {
             {
                 name = "foo",
                 type = "function",
                 children = {},
             },
-        })
+        }
 
-        local lines = formatter.format()
+        local lines = formatter.format(sections, true)
 
         assert.are.same({ "f foo()" }, lines)
     end)
 
     it("should format function section with parameters", function()
-        formatter.update_sections({
+        local sections = {
             {
                 name = "foo",
                 type = "function",
                 children = {},
                 parameters = { "abc", "bar" },
             },
-        })
+        }
 
-        local lines = formatter.format()
+        local lines = formatter.format(sections, true)
 
         assert.are.same({ "f foo(abc, bar)" }, lines)
     end)
 
     it("should format attribute section", function()
-        formatter.update_sections({
+        local sections = {
             {
                 name = "bar",
                 type = "attribute",
                 children = {},
             },
-        })
+        }
 
-        local lines = formatter.format()
+        local lines = formatter.format(sections, true)
 
         assert.are.same({ "󰠲 bar" }, lines)
     end)
 
     it("should format attribute section with type annotation", function()
-        formatter.update_sections({
+        local sections = {
             {
                 name = "bar",
                 type = "attribute",
                 type_annotation = "int",
                 children = {},
             },
-        })
+        }
 
-        local lines = formatter.format()
+        local lines = formatter.format(sections, true)
 
         assert.are.same({ "󰠲 bar: int" }, lines)
     end)
 
     it("should not collapse section when it has no child", function()
-        formatter.update_sections({
+        local sections = {
             {
                 name = "foo",
                 type = "function",
                 children = {},
                 parameters = { "abc", "bar" },
             },
-        })
+        }
 
-        formatter.collapse(1)
-        local lines = formatter.format()
+        formatter.toggle_collapse(sections, 1)
+        local lines = formatter.format(sections, true)
 
         assert.are.same({ "f foo(abc, bar)" }, lines)
     end)
 
     it("should collapse section", function()
-        formatter.update_sections({
+        local sections = {
             {
                 name = "foo",
                 type = "function",
@@ -154,17 +150,17 @@ describe("should display sections", function()
                     },
                 },
             },
-        })
+        }
 
-        formatter.collapse(1)
-        assert.are.same({ "f foo() ..." }, formatter.format())
+        formatter.toggle_collapse(sections, 1)
+        assert.are.same({ "f foo() ..." }, formatter.format(sections, true))
 
-        formatter.collapse(1)
-        assert.are.same({ "f foo()", "  f foo()" }, formatter.format())
+        formatter.toggle_collapse(sections, 1)
+        assert.are.same({ "f foo()", "  f foo()" }, formatter.format(sections, true))
     end)
 
-    it("should hide private section when toggled", function()
-        formatter.update_sections({
+    it("should hide private section", function()
+        local sections = {
             {
                 name = "foo",
                 type = "function",
@@ -177,17 +173,10 @@ describe("should display sections", function()
                 private = true,
                 children = {},
             },
-        })
+        }
 
-        assert.are.same({ "f foo()", "f _foo()" }, formatter.format())
-
-        formatter.toggle_private()
-
-        assert.are.same({ "f foo()" }, formatter.format())
-
-        formatter.toggle_private()
-
-        assert.are.same({ "f foo()", "f _foo()" }, formatter.format())
+        assert.are.same({ "f foo()", "f _foo()" }, formatter.format(sections, true))
+        assert.are.same({ "f foo()" }, formatter.format(sections, false))
     end)
 end)
 
@@ -195,7 +184,7 @@ describe("should get section pos", function()
     local formatter = require("sections.formatter")
 
     it("should retrieve position of sequential sections", function()
-        formatter.update_sections({
+        local sections = {
             {
                 name = "First header",
                 type = "header",
@@ -208,14 +197,14 @@ describe("should get section pos", function()
                 position = { 5, 1 },
                 children = {},
             },
-        })
+        }
 
-        local section_pos = formatter.get_section_pos(2)
+        local section_pos = formatter.get_section_pos(sections, 2)
 
         assert.are.same({ 5, 1 }, section_pos)
     end)
     it("should retrieve position of nested sections", function()
-        formatter.update_sections({
+        local sections = {
             {
                 name = "First header",
                 type = "header",
@@ -235,9 +224,9 @@ describe("should get section pos", function()
                 position = { 5, 1 },
                 children = {},
             },
-        })
+        }
 
-        local section_pos = formatter.get_section_pos(2)
+        local section_pos = formatter.get_section_pos(sections, 2)
 
         assert.are.same({ 3, 1 }, section_pos)
     end)

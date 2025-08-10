@@ -1,66 +1,104 @@
-local parser = require("sections.parser")
-local formatter = require("sections.formatter")
-
 local M = {}
 
-local PANE_FILETYPE = "sections-pane"
-local _pane_infos = {}
+M.PANE_FILETYPE = "sections-pane"
+local pane_infos = {}
 
+local function init_pane_info(pane_win, pane_buf, on_close)
+    local tab = vim.api.nvim_get_current_tabpage()
+    pane_infos[tab] = {
+        header_lines = {},
+        pane_win = pane_win,
+        pane_buf = pane_buf,
+        on_close = on_close,
+    }
+end
 local function get_pane_info()
     local cur_tab = vim.api.nvim_get_current_tabpage()
-    return _pane_infos[cur_tab]
+    return pane_infos[cur_tab]
 end
 
-local function on_section_selected()
+local function clear_pane_info()
+    local cur_tab = vim.api.nvim_get_current_tabpage()
+    pane_infos[cur_tab] = nil
+end
+
+M.get_selected_section = function()
     local info = get_pane_info()
-
-    local cur_line = vim.api.nvim_win_get_cursor(0)[1]
-    local pos = formatter.get_section_pos(cur_line)
-
-    if pos == nil then
-        return
+    if info == nil then
+        return nil, "Cannot get the current line: section pane is not open"
     end
 
-    vim.api.nvim_win_set_cursor(info.watched_win, pos)
+    local selected_line = vim.api.nvim_win_get_cursor(info.pane_win)[1]
+    return selected_line - #info.header_lines
 end
 
-local function get_header_line()
-    if formatter.shows_private_sections() then
-        return "󰈈 - Private sections are visible"
-    else
-        return "󰈉 - Private sections are hidden"
-    end
-end
-
-local function refresh_pane_content(lines)
+local function write_lines(lines, start, end_)
     local pane_info = get_pane_info()
     if pane_info == nil then
-        return
+        return false, "Cannot write lines: pane is not open"
     end
 
-    local pane_buf = pane_info.pane_buf
     local cursor = vim.api.nvim_win_get_cursor(pane_info.pane_win)
+
+    local pane_buf = pane_info.pane_buf
     vim.bo[pane_buf].modifiable = true
-    vim.api.nvim_buf_set_lines(pane_buf, 0, -1, false, { get_header_line() })
-    vim.api.nvim_buf_set_lines(pane_buf, 1, -1, false, lines)
+    vim.api.nvim_buf_set_lines(pane_buf, start, end_, false, lines)
     vim.bo[pane_buf].modifiable = false
+
     vim.api.nvim_win_set_cursor(pane_info.pane_win, cursor)
+
+    return true, nil
 end
 
-local function on_section_toggle()
-    local cur_line = vim.api.nvim_win_get_cursor(0)[1]
-    formatter.collapse(cur_line)
-    refresh_pane_content(formatter.format())
+M.write_header = function(lines)
+    local pane_info = get_pane_info()
+
+    if pane_info == nil then
+        return false, "Cannot write header lines: section pane is not open"
+    end
+
+    local success, err = write_lines(lines, 0, #pane_info.header_lines)
+    if not success then
+        return false, err
+    end
+
+    pane_info.header_lines = lines
+    return true, nil
 end
 
-local function on_private_toggle()
-    formatter.toggle_private()
-    refresh_pane_content(formatter.format())
+M.write_sections = function(lines)
+    local pane_info = get_pane_info()
+
+    if pane_info == nil then
+        return false, "Cannot write sections lines: section pane is not open"
+    end
+
+    local success, err = write_lines(lines, #pane_info.header_lines, -1)
+    if not success then
+        return false, err
+    end
+
+    return true, nil
 end
 
-local function open_pane()
+M.write_error = function(lines)
+    local pane_info = get_pane_info()
+
+    if pane_info == nil then
+        return false, "Cannot write error lines: section pane is not open"
+    end
+
+    local success, err = write_lines(lines, 0, -1)
+    if not success then
+        return false, err
+    end
+
+    return true, nil
+end
+
+M.open = function(opts)
     local bufid = vim.api.nvim_create_buf(true, false)
-    vim.bo[bufid].filetype = PANE_FILETYPE
+    vim.bo[bufid].filetype = M.PANE_FILETYPE
     vim.bo[bufid].buftype = "nofile"
     vim.bo[bufid].modifiable = false
 
@@ -71,107 +109,65 @@ local function open_pane()
     )
     vim.wo[winid].wrap = false
     vim.api.nvim_set_option_value("cursorline", true, { win = winid })
-    vim.keymap.set("n", "<C-]>", on_section_selected, { buffer = bufid })
-    vim.keymap.set("n", "<cr>", on_section_toggle, { buffer = bufid })
-    vim.keymap.set("n", "p", on_private_toggle, { buffer = bufid })
 
-    local tab = vim.api.nvim_get_current_tabpage()
-    local watched_buf = vim.api.nvim_get_current_buf()
-    local watched_win = vim.api.nvim_get_current_win()
-    _pane_infos[tab] = {
-        pane_buf = bufid,
-        pane_win = winid,
-        watched_buf = watched_buf,
-        watched_win = watched_win,
-    }
+    for keymap, action in pairs(opts.keymaps) do
+        vim.keymap.set("n", keymap, action, { buffer = bufid })
+    end
 
-    M.refresh_pane(watched_buf)
+    init_pane_info(winid, bufid, opts.on_close)
 end
 
-local function close_pane(winid)
-    local bufid = vim.api.nvim_win_get_buf(winid)
-    vim.api.nvim_buf_delete(bufid, { force = true })
-    M.cleanup_pane()
-end
-
-M.cleanup_pane = function()
-    local cur_tab = vim.api.nvim_get_current_tabpage()
-    _pane_infos[cur_tab] = nil
-end
-
-M.get_watched_buf = function()
+M.close = function()
     local info = get_pane_info()
     if info == nil then
-        return nil
+        return -- Nothing to do
     end
 
-    return info.watched_buf
+    if vim.api.nvim_buf_is_valid(info.pane_buf) then
+        vim.api.nvim_buf_delete(info.pane_buf, { force = true })
+    end
+    if vim.api.nvim_win_is_valid(info.pane_win) then
+        vim.api.nvim_win_close(info.pane_win, true)
+    end
+
+    if info.on_close ~= nil then
+        info.on_close()
+    end
+
+    clear_pane_info()
 end
 
-M.get_pane_buf = function()
-    local info = get_pane_info()
-    if info == nil then
-        return nil
-    end
+M.setup = function()
+    local group = vim.api.nvim_create_augroup("SectionsPaneCleanup", { clear = true })
 
-    return info.pane_buf
-end
+    vim.api.nvim_create_autocmd("BufWinEnter", {
+        group = group,
+        callback = function()
+            local info = get_pane_info()
+            if info == nil then
+                return
+            end
 
-M.get_pane_win = function()
-    local info = get_pane_info()
-    if info == nil then
-        return nil
-    end
+            local win = vim.api.nvim_get_current_win()
+            if win == info.pane_win then
+                -- Prevent switching to another buffer from the pane window, by closing the pane.
+                M.close()
+            end
+        end,
+    })
+    vim.api.nvim_create_autocmd("WinClosed", {
+        group = group,
+        callback = function(args)
+            local info = get_pane_info()
+            if info == nil then
+                return
+            end
 
-    return info.pane_win
-end
-
-M.toggle_pane = function()
-    local pane_info = get_pane_info()
-
-    if pane_info ~= nil then
-        close_pane(pane_info.pane_win)
-    else
-        open_pane()
-    end
-end
-
-M.refresh_pane = function(updated_buf, buf_win)
-    if updated_buf == nil then
-        return
-    end
-
-    local pane_info = get_pane_info()
-    if pane_info == nil then
-        return
-    end
-
-    if buf_win ~= nil then
-        local win_cfg = vim.api.nvim_win_get_config(buf_win)
-        if win_cfg.relative ~= "" then
-            return -- Window is floating
-        end
-
-        if buf_win == pane_info.pane_win then
-            return -- We were about to read sections from the pane win
-        end
-    end
-
-    local sections, err = parser.parse_sections(updated_buf)
-    local lines = {}
-    if sections ~= nil then
-        formatter.update_sections(sections)
-        lines = formatter.format()
-    elseif err ~= nil then
-        lines = { err }
-    end
-
-    refresh_pane_content(lines)
-
-    pane_info.watched_buf = updated_buf
-    if buf_win ~= nil then
-        pane_info.watched_win = buf_win
-    end
+            if args.buf == info.pane_buf then
+                M.close()
+            end
+        end,
+    })
 end
 
 return M
