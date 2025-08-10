@@ -8,6 +8,11 @@ local _config = {
         attribute = "󰠲",
         header = "",
     },
+    keymaps = {
+        toggle_private = "p",
+        toggle_section = "<cr>",
+        select_section = "<C-]>",
+    },
 }
 
 M.init = function(config)

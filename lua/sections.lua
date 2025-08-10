@@ -1,4 +1,4 @@
-local init_config = require("sections.config").init
+local config = require("sections.config")
 local pane = require("sections.pane")
 local hl = require("sections.hl")
 local header = require("sections.header")
@@ -164,6 +164,7 @@ end
 
 M.toggle = function()
     local info = get_tab_info()
+    local cfg = config.get_config()
 
     if info == nil then
         local watched_buf = vim.api.nvim_get_current_buf()
@@ -171,9 +172,9 @@ M.toggle = function()
         init_tab_info(watched_win, watched_buf)
         pane.open({
             keymaps = {
-                ["<C-]>"] = select_section,
-                ["<cr>"] = toggle_section,
-                p = toggle_private,
+                [cfg.keymaps.select_section] = select_section,
+                [cfg.keymaps.toggle_section] = toggle_section,
+                [cfg.keymaps.toggle_private] = toggle_private,
             },
             on_close = clear_tab_info,
         })
@@ -184,8 +185,8 @@ M.toggle = function()
     end
 end
 
-M.setup = function(config)
-    init_config(config)
+M.setup = function(config_)
+    config.init(config_)
     setup_autocommands()
     pane.setup()
     hl.setup()
