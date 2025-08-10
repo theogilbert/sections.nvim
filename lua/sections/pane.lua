@@ -129,6 +129,7 @@ M.open = function(opts)
     vim.wo[winid].wrap = false
     vim.api.nvim_set_option_value("cursorline", true, { win = winid })
     vim.api.nvim_win_set_hl_ns(winid, hl.NS_ID)
+    vim.api.nvim_set_current_win(winid)
 
     for keymap, action in pairs(opts.keymaps) do
         vim.keymap.set("n", keymap, action, { buffer = bufid })
