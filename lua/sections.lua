@@ -38,14 +38,6 @@ local function clear_tab_info()
     tab_infos[cur_tab] = nil
 end
 
-local function get_header_lines(show_private_sections)
-    if show_private_sections then
-        return { "󰈈 - Private sections are visible" }
-    else
-        return { "󰈉 - Private sections are hidden" }
-    end
-end
-
 local function render_header(tab_info)
     local header_lines = header.get_lines(tab_info.show_private)
     pane.write_header(header_lines)
@@ -101,6 +93,7 @@ local function select_section()
     end
 
     vim.api.nvim_win_set_cursor(info.watched_win, section_pos)
+    vim.api.nvim_set_current_win(info.watched_win)
 end
 
 local function toggle_section()
