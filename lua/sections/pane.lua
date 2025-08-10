@@ -1,4 +1,3 @@
--- TODO parse public/private functions
 local parser = require("sections.parser")
 local formatter = require("sections.formatter")
 
@@ -25,6 +24,14 @@ local function on_section_selected()
     vim.api.nvim_win_set_cursor(info.watched_win, pos)
 end
 
+local function get_header_line()
+    if formatter.shows_private_sections() then
+        return "󰈈 - Private sections are visible"
+    else
+        return "󰈉 - Private sections are hidden"
+    end
+end
+
 local function refresh_pane_content(lines)
     local pane_info = get_pane_info()
     if pane_info == nil then
@@ -32,14 +39,22 @@ local function refresh_pane_content(lines)
     end
 
     local pane_buf = pane_info.pane_buf
+    local cursor = vim.api.nvim_win_get_cursor(pane_info.pane_win)
     vim.bo[pane_buf].modifiable = true
-    vim.api.nvim_buf_set_lines(pane_buf, 0, -1, false, lines)
+    vim.api.nvim_buf_set_lines(pane_buf, 0, -1, false, { get_header_line() })
+    vim.api.nvim_buf_set_lines(pane_buf, 1, -1, false, lines)
     vim.bo[pane_buf].modifiable = false
+    vim.api.nvim_win_set_cursor(pane_info.pane_win, cursor)
 end
 
 local function on_section_toggle()
     local cur_line = vim.api.nvim_win_get_cursor(0)[1]
     formatter.collapse(cur_line)
+    refresh_pane_content(formatter.format())
+end
+
+local function on_private_toggle()
+    formatter.toggle_private()
     refresh_pane_content(formatter.format())
 end
 
@@ -49,12 +64,16 @@ local function open_pane()
     vim.bo[bufid].buftype = "nofile"
     vim.bo[bufid].modifiable = false
 
-    local winid =
-        vim.api.nvim_open_win(bufid, false, { vertical = true, split = "left", width = 50, style = "minimal" })
+    local winid = vim.api.nvim_open_win(
+        bufid,
+        false,
+        { vertical = true, split = "left", win = -1, width = 50, style = "minimal" }
+    )
     vim.wo[winid].wrap = false
     vim.api.nvim_set_option_value("cursorline", true, { win = winid })
     vim.keymap.set("n", "<C-]>", on_section_selected, { buffer = bufid })
     vim.keymap.set("n", "<cr>", on_section_toggle, { buffer = bufid })
+    vim.keymap.set("n", "p", on_private_toggle, { buffer = bufid })
 
     local tab = vim.api.nvim_get_current_tabpage()
     local watched_buf = vim.api.nvim_get_current_buf()

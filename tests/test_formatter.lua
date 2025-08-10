@@ -162,6 +162,33 @@ describe("should display sections", function()
         formatter.collapse(1)
         assert.are.same({ "f foo()", "  f foo()" }, formatter.format())
     end)
+
+    it("should hide private section when toggled", function()
+        formatter.update_sections({
+            {
+                name = "foo",
+                type = "function",
+                private = false,
+                children = {},
+            },
+            {
+                name = "_foo",
+                type = "function",
+                private = true,
+                children = {},
+            },
+        })
+
+        assert.are.same({ "f foo()", "f _foo()" }, formatter.format())
+
+        formatter.toggle_private()
+
+        assert.are.same({ "f foo()" }, formatter.format())
+
+        formatter.toggle_private()
+
+        assert.are.same({ "f foo()", "f _foo()" }, formatter.format())
+    end)
 end)
 
 describe("should get section pos", function()

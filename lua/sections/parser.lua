@@ -16,6 +16,7 @@ local function build_section(match, metadata, query_info, buf_id)
                 local sr, sc, _, _ = ts.get_node_range(node)
                 current_section.position = { sr + 1, sc }
                 current_section.type = metadata.type
+                current_section.private = (metadata.private == "true")
                 current_section.node = node
             elseif capture_name == "section.param" then
                 if current_section.parameters == nil then
