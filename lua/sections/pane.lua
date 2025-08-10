@@ -1,3 +1,5 @@
+local hl = require("sections.hl")
+
 local M = {}
 
 M.PANE_FILETYPE = "sections-pane"
@@ -96,6 +98,23 @@ M.write_error = function(lines)
     return true, nil
 end
 
+-- @param hl_rules table[] List of highlight rules to apply to the buffer, where each rule has:
+--   - `higroup` (string): The name of the highlight group to apply
+--   - `start` (string|integer[]): Start of region as a (line, column) tuple
+--     or string accepted by |getpos()|
+--   - `finish` (string|integer[]): End of region as a (line, column) tuple
+--     or string accepted by |getpos()|
+M.apply_highlight = function(hl_rules)
+    local info = get_pane_info()
+    if info == nil then
+        return
+    end
+
+    for _, rule in ipairs(hl_rules) do
+        vim.hl.range(info.pane_buf, hl.NS_ID, rule.higroup, rule.start, rule.finish)
+    end
+end
+
 M.open = function(opts)
     local bufid = vim.api.nvim_create_buf(true, false)
     vim.bo[bufid].filetype = M.PANE_FILETYPE
@@ -109,6 +128,7 @@ M.open = function(opts)
     )
     vim.wo[winid].wrap = false
     vim.api.nvim_set_option_value("cursorline", true, { win = winid })
+    vim.api.nvim_win_set_hl_ns(winid, hl.NS_ID)
 
     for keymap, action in pairs(opts.keymaps) do
         vim.keymap.set("n", keymap, action, { buffer = bufid })

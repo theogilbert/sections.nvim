@@ -1,6 +1,7 @@
 local init_config = require("sections.config").init
 local pane = require("sections.pane")
 local hl = require("sections.hl")
+local header = require("sections.header")
 local parser = require("sections.parser")
 local formatter = require("sections.formatter")
 
@@ -45,6 +46,12 @@ local function get_header_lines(show_private_sections)
     end
 end
 
+local function render_header(tab_info)
+    local header_lines = header.get_lines(tab_info.show_private)
+    pane.write_header(header_lines)
+    pane.apply_highlight(header.get_hl_rules(tab_info.show_private))
+end
+
 local function refresh_pane(win, buf)
     local info = get_tab_info()
     if info == nil or win == nil or buf == nil then
@@ -61,7 +68,7 @@ local function refresh_pane(win, buf)
         return -- We do not want to read sections from the sections pane
     end
 
-    local header = get_header_lines(info.show_private)
+    render_header(info)
 
     local sections, err = parser.parse_sections(buf)
     if err ~= nil then
@@ -70,8 +77,6 @@ local function refresh_pane(win, buf)
     end
 
     local sections_lines = formatter.format(sections, info.show_private)
-
-    pane.write_header(header)
     pane.write_sections(sections_lines)
 
     info.watched_win = win
@@ -123,8 +128,7 @@ local function toggle_private()
 
     info.show_private = not info.show_private
 
-    local header = get_header_lines(info.show_private)
-    pane.write_header(header)
+    render_header(info)
 
     local sections_lines = formatter.format(info.sections, info.show_private)
     pane.write_sections(sections_lines)
