@@ -84,12 +84,18 @@ local function select_section()
 
     local section_number, err = pane.get_selected_section()
     if err ~= nil then
-        return nil, err
+        vim.notify("Failed to select section: " .. err, vim.log.levels.ERROR)
+        return
+    end
+
+    if section_number == nil then
+        return
     end
 
     local section_pos = formatter.get_section_pos(info.sections, section_number)
     if section_pos == nil then
-        return nil, "Could not retrieve section position"
+        vim.notify("Failed to select section: could not retrieve section position", vim.log.levels.ERROR)
+        return
     end
 
     vim.api.nvim_win_set_cursor(info.watched_win, section_pos)

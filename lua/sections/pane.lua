@@ -31,7 +31,9 @@ M.get_selected_section = function()
     end
 
     local selected_line = vim.api.nvim_win_get_cursor(info.pane_win)[1]
-    return selected_line - #info.header_lines
+    local section_number = selected_line - #info.header_lines
+
+    return (section_number >= 1) and section_number or nil
 end
 
 local function write_lines(lines, start, end_)
