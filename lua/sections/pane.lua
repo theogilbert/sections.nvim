@@ -1,4 +1,3 @@
--- TODO parse public/private functions
 local parser = require("sections.parser")
 local formatter = require("sections.formatter")
 
@@ -54,8 +53,11 @@ local function open_pane()
     vim.bo[bufid].buftype = "nofile"
     vim.bo[bufid].modifiable = false
 
-    local winid =
-        vim.api.nvim_open_win(bufid, false, { vertical = true, split = "left", width = 50, style = "minimal" })
+    local winid = vim.api.nvim_open_win(
+        bufid,
+        false,
+        { vertical = true, split = "left", win = -1, width = 50, style = "minimal" }
+    )
     vim.wo[winid].wrap = false
     vim.api.nvim_set_option_value("cursorline", true, { win = winid })
     vim.keymap.set("n", "<C-]>", on_section_selected, { buffer = bufid })
