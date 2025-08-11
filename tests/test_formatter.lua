@@ -92,6 +92,21 @@ describe("should display sections", function()
         assert.are.same({ "f foo(abc, bar)" }, lines)
     end)
 
+    it("should format class section with parameters", function()
+        local sections = {
+            {
+                name = "Foo",
+                type = "class",
+                children = {},
+                parameters = { "str" },
+            },
+        }
+
+        local lines = formatter.format(sections, true)
+
+        assert.are.same({ " Foo(str)" }, lines)
+    end)
+
     it("should format attribute section", function()
         local sections = {
             {

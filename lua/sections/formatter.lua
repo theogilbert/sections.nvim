@@ -9,7 +9,7 @@ end
 
 local function get_section_name(section)
     local suffix = ""
-    if section.type == "function" then
+    if section.type == "function" or section.type == "class" then
         if section.parameters == nil then
             suffix = "()"
         else
