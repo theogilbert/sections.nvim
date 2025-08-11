@@ -180,7 +180,8 @@ Query Format:~
 Queries should capture nodes with the following captures:
 - `@section` - The entire section node
 - `@section.name` - The section name
-- `@section.param` - Section parameters, displayed within parenthesis (optional)
+- `@section.param` - Section parameters (optional)
+  Currently, parameters are only compatible with section types `function` and `class`.
 - `@section.type_annotation` - Type annotations, displayed after `:` (optional)
 
 Metadata:~
