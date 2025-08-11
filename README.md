@@ -16,7 +16,8 @@ A Neovim plugin that displays code sections (functions, classes, headers, etc.) 
 
 - Neovim 0.11.3+ with Tree-sitter support.\
   Previous versions have not been tested.
-- Tree-sitter parsers for the languages you want to use
+- Tree-sitter parsers for the languages you want to use.
+- A Nerd Font to properly display icons.
 
 ## Installation
 
