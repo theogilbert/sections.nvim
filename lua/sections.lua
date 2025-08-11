@@ -43,7 +43,6 @@ local IGNORED_BUFTYPES = { "nofile", "terminal", "quickfix", "help", "prompt" }
 local function supports_buf(buf)
     local bt = vim.api.nvim_get_option_value("buftype", { buf = buf })
     if vim.tbl_contains(IGNORED_BUFTYPES, bt) then
-        vim.notify("Do not support bt " .. bt)
         return false
     end
 
