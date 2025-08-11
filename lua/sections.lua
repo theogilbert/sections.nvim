@@ -38,6 +38,18 @@ local function clear_tab_info()
     tab_infos[cur_tab] = nil
 end
 
+local IGNORED_BUFTYPES = { "nofile", "terminal", "quickfix", "help", "prompt" }
+
+local function supports_buf(buf)
+    local bt = vim.api.nvim_get_option_value("buftype", { buf = buf })
+    if vim.tbl_contains(IGNORED_BUFTYPES, bt) then
+        vim.notify("Do not support bt " .. bt)
+        return false
+    end
+
+    return true
+end
+
 local function render_header(tab_info)
     local header_lines = header.get_lines(tab_info.show_private)
     pane.write_header(header_lines)
@@ -55,9 +67,8 @@ local function refresh_pane(win, buf)
         return -- Window is floating
     end
 
-    local ft = vim.api.nvim_get_option_value("filetype", { buf = buf })
-    if ft == pane.PANE_FILETYPE then
-        return -- We do not want to read sections from the sections pane
+    if not supports_buf(buf) then
+        return
     end
 
     render_header(info)
